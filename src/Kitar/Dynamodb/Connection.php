@@ -75,7 +75,8 @@ class Connection extends BaseConnection
             'version' => $config['version'] ?? 'latest',
             'credentials' => [
                 'key' => $config['access_key'] ?? '',
-                'secret' => $config['secret_key'] ?? ''
+                'secret' => $config['secret_key'] ?? '',
+                'token' => $config['token'] ?? '',
             ]
         ]);
 
