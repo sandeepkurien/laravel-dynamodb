@@ -172,6 +172,30 @@ class Model extends BaseModel
     }
 
     /**
+     * @inheritdoc
+     */
+    protected function incrementOrDecrement($column, $amount, $extra, $method)
+    {
+        $query = $this->newQuery()->key($this->getKey());
+
+        if (! $this->exists) {
+            return $query->{$method}($column, $amount, $extra);
+        }
+
+        if ($this->fireModelEvent('updating') === false) {
+            return false;
+        }
+
+        return tap($query->{$method}($column, $amount, $extra), function ($response) {
+            $this->forceFill($response['Attributes']);
+
+            $this->syncChanges();
+
+            $this->fireModelEvent('updated', false);
+        });
+    }
+
+    /**
      * Perform a model update operation.
      *
      * @param  \Kitar\Dynamodb\Query\Builder  $query
@@ -327,6 +351,10 @@ class Model extends BaseModel
             "keyConditionIn",
             "keyConditionBetween",
         ];
+
+        if (in_array($method, ['increment', 'decrement'])) {
+            return $this->$method(...$parameters);
+        }
 
         if (! in_array($method, $allowedBuilderMethods)) {
             static::throwBadMethodCallException($method);
